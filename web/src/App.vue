@@ -9,9 +9,8 @@ const createdAt = dayjs().format('YYYY-MM-DD HH:mm:ss')
 const loadding = ref(false)
 const visible = ref(false)
 const summary = ref({} as any)
-
+const gtg = new WebSocket('ws://124.223.31.164:8080/ws')
 const message = ref('')
-const api_key = useStorage('api_key', '')
 const messages = useStorage('messages', [
   {
     username: "chatGPT",
@@ -31,15 +30,29 @@ const sendMessage = async () => {
     time: dayjs().format('HH:mm'),
     type: 1,
   })
-  const data: any = await completion(text)
-  console.log(data)
-  const replyMessage = data?.choices ? data.choices[0].text : data?.error?.message
-  messages.value.push({
+  gtg.send(text)
+
+  gtg.onopen = function () { }
+  gtg.onmessage = (res) => {
+    // console.log(res?.data?.substr('[tcp://127.0.0.1:59004]',"ChatGPT"))
+    // res?.data?.indexOf('说')
+   
+// res?.data?.substr(res?.data?.indexOf('说，'))
+console.log(res?.data?.substr(res?.data?.indexOf('说')+2)) 
+    messages.value.push({
     username: "chatGPT",
-    msg: replyMessage,
+    msg: res?.data?.substr(res?.data?.indexOf('说')+2),
     time: dayjs().format('HH:mm'),
     type: 0,
   })
+
+  }
+
+
+  // const data: any = await completion(text)
+  // console.log(data)
+  // const replyMessage = data?.choices ? data.choices[0].text : data?.error?.message
+  
   loadding.value = false
 }
 
@@ -49,7 +62,7 @@ const clearMessages = () => {
 
 const refushCredit = async () => {
   loadding.value = true
-  summary.value = await creditSummary()
+  // summary.value = await creditSummary()
   loadding.value = false
 }
 const updateApiKey = () => {
@@ -58,8 +71,19 @@ const updateApiKey = () => {
 }
 
 onMounted(async () => {
-  await refushCredit()
+  // await refushCredit()
+
 })
+
+
+
+const enterMessage = (e:any)=>{
+  
+  if(e?.keyCode==13){
+    console.log(e)
+    sendMessage()
+  }
+}
 </script>
 
 <template>
@@ -110,21 +134,21 @@ onMounted(async () => {
       </main>
       <footer id="footer">
         <div class="relative p-4 w-full overflow-hidden text-gray-600 focus-within:text-gray-400 flex items-center">
-          <a-textarea v-model:value="message" :auto-size="{ minRows: 2, maxRows: 5 }" placeholder="请输入消息..."
+          <a-textarea @keyup="enterMessage" v-model:value="message" :auto-size="{ minRows: 2, maxRows: 5 }" placeholder="请输入消息..."
             class="appearance-none pl-10 py-2 w-full bg-white border border-gray-300 rounded-full text-sm placeholder-gray-800 focus:outline-none focus:border-blue-500 focus:border-blue-500 focus:shadow-outline-blue" />
           <span class="absolute inset-y-0 right-0 bottom-8 pr-6 flex items-end">
-            <a-button shape="round" type="primary" @click="sendMessage">发送</a-button>
+            <a-button shape="round" type="primary"   @click="sendMessage">发送</a-button>
           </span>
         </div>
 
       </footer>
     </div>
-    <a-modal v-model:visible="visible" title="更新API_KEY" @ok="updateApiKey" okText="更新" cancelText="关闭">
+    <!-- <a-modal v-model:visible="visible" title="更新API_KEY" @ok="updateApiKey" okText="更新" cancelText="关闭">
       <a-alert message="API_KEY往往是sk-开头的字符串" type="info" />
       <div class="mt-2"></div>
       <a-input v-model:value="api_key" placeholder="请输入API_KEY" />
-    </a-modal>
-  </div>
+    </a-modal> -->
+</div>
 </template>
 
 <style scoped>
