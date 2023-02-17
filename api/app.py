@@ -42,6 +42,7 @@ async def completions(request: Request, message: Message):
 
 @app.get("/credit_summary")
 async def credit_summary(request: Request):
+    
     api_key = request.headers.get('api_key')
     res = await api.credit_summary(api_key=api_key)
     return res
